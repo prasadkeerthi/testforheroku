@@ -1,0 +1,114 @@
+<html>
+<head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+        <style>
+            body{
+                background-color: #0079d3;
+            }
+        </style>
+</head>    
+<body>
+    <div class="container">
+                <div class="row">
+                    <h1 class="text-center" style="color: white;">Cyber bullying</h1>
+                </div>
+                <div>
+                <div class="posts"></div>
+                        <!-- <div class="well well-lg">
+                                <h4>Comments from: <a href="http://www.reddit.com/r/TrueReddit/comments/2yole7/america_dumbs_down_us_overrun_by_wave_of/">America dumbs down: U.S. overrun by wave of anti-science, anti-intellectual thinking</a></h4>
+                                <div class="reddit-dump">        
+                                </div>
+                        </div> -->
+                </div>
+    </div>
+</body>
+<script>
+
+    function countJsonObjects(obj) { return Object.keys(obj).length; }
+
+var app = {
+  init: function() {
+    console.log('Running...');
+    if (document.readyState != 'loading') {
+      this.startApp();
+    } else {
+      document.addEventListener('DOMContentLoaded', this.startApp);
+    }
+  },
+  
+  //fetch helpers
+  status: function (response) {
+    if (response.status >= 200 && response.status < 300) {
+      return Promise.resolve(response)
+    } else {
+      return Promise.reject(new Error(response.statusText))
+    }
+  },
+  json: function (response) {
+    return response.json()
+  },
+  
+  //Main
+  startApp: function() {
+   //Get Feed
+    console.log('Fetching feed...');
+     fetch('http://localhost:8000/home')
+      .then(app.status)
+      .then(app.json)
+      .then(app.getCommentsFromJSON)
+    	.then(app.addCommentstoHTML)
+      .catch(function(error) {
+      console.log('request failed', error.message)
+      });
+  },
+  
+  //Drop the text into the HTML
+  addCommentstoHTML: function(text) {
+    console.log('Printing...');
+    var comments = document.querySelector('.reddit-dump');
+		comments.innerHTML = text;
+  },
+  
+  getCommentsFromJSON: function(jsonData) {
+    console.log('Finding comments...');
+    var postsDiv = document.getElementsByClassName('posts')[0];
+    jQuery.each(jsonData, function(i, val) {
+      postsDiv.innerHTML += `<div class="well well-lg posts_well" id='${i}' >
+      <h4><b>${val.Title}</b></h4>
+      <h6>${val.Content}</h6>
+      </div>`
+    });
+
+    var text = app.getCommentsFromArray(jsonData[1].data.children);
+    
+    return text;
+  },
+  
+  //Recursively go through the object tree and compile all the comments
+  getCommentsFromArray: function(arr) {
+    var text = '';
+    arr.forEach(function(item) {
+      if (typeof item !== 'undefined') {
+        text += '<div class="well well-sm" style="background-color:white;">'+item.data.body+'</div>';
+        // if (typeof item.data.replies !== 'undefined' && item.data.replies !== '') {
+        //   text += "\n" + app.getCommentsFromArray(item.data.replies.data.children);
+        // }
+      }
+    });
+    
+    return text;
+  }
+};
+
+app.init();
+
+$(document).on('click','.posts_well',function(){
+  console.log($(this).attr('id'));
+  window.location.href = 'induvidual_comments.html?id='+$(this).attr('id');
+})
+
+</script>
+</html>
